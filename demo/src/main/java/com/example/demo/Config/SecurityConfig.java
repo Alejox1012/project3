@@ -18,28 +18,35 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-
+    // Filtros y autenticación personalizados
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AuthenticationProvider authProvider;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception 
-    {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-            .csrf(csrf -> 
-                  csrf
-                  .disable())
+            // Deshabilitar CSRF ya que estamos usando autenticación basada en tokens (stateless)
+            .csrf(csrf -> csrf.disable())
+            
+            // Configuración de las rutas de autorización
             .authorizeHttpRequests(auth -> 
                 auth
-                    .requestMatchers("/auth/**").permitAll()
-                    .anyRequest().authenticated()
+                    .requestMatchers("/auth/**").permitAll()  // Rutas de autenticación no requieren autenticación
+                    .anyRequest().authenticated()  // Resto de las rutas requieren autenticación
             )
-            .sessionManagement(sessionManager->
-               sessionManager
-                   .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            
+            // Configuración para que no se mantenga el estado de sesión (stateless)
+            .sessionManagement(sessionManager ->
+                sessionManager.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+            
+            // Establecer el AuthenticationProvider
             .authenticationProvider(authProvider)
+            
+            // Agregar el filtro JWT antes de la autenticación por nombre y contraseña
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             
+            // Construir la configuración de seguridad
             .build();
     }
 }

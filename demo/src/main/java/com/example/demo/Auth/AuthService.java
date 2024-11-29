@@ -2,6 +2,7 @@ package com.example.demo.Auth;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -46,5 +47,29 @@ public class AuthService {
           .token(jwtService.getToken(user))
           .build();
     }
+
+
+     // Método para obtener datos del perfil
+     public User getProfile() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    // Método para actualizar datos del perfil
+    public User updateProfile(User updatedUser) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Solo actualizamos los campos permitidos
+        user.setFirstname(updatedUser.getFirstname());
+        user.setLastname(updatedUser.getLastname());
+        user.setCountry(updatedUser.getCountry());
+
+        return userRepository.save(user);
+    }
+
+    
 
 }
